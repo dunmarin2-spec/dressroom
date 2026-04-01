@@ -3,33 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Magic Fit - 찬둥 리얼 에디션</title>
+    <title>Magic Fit - 찬둥 에디션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@900&family=Nanum+Pen+Script&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #fff5f7; color: #4b5563; }
         .chan-doong-signature { font-family: 'Nanum Pen Script', cursive; font-size: 22px; color: #f43f5e; transform: rotate(-10deg) translateY(6px); margin-right: 4px; }
         
-        /* 🧍 리얼 마네킹 배경 (실제 체형 실루엣) */
-        .fitting-room { 
-            position: relative; width: 280px; height: 450px; 
-            background: url('https://i.imgur.com/7Yf0Z8V.png') no-repeat center/contain; /* 리얼한 모델 실루엣 이미지 */
-            margin: 0 auto;
-        }
+        /* 🧍 마네킹 몸체 (세련된 실루엣) */
+        .mannequin-frame { position: relative; width: 240px; height: 420px; background: #ffe4e6; border-radius: 120px 120px 50px 50px; margin: 0 auto; border: 4px solid #fecdd3; overflow: hidden; }
+        .head-part { width: 50px; height: 65px; background: #fda4af; border-radius: 50%; margin: 25px auto 5px; }
 
-        /* 👕 실제 옷 이미지가 겹쳐질 레이어 */
-        .cloth-layer { 
-            position: absolute; left: 50%; transform: translateX(-50%); 
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            pointer-events: none; opacity: 0;
-        }
-        .cloth-layer img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2)); }
-        .show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        /* 👕 실제 옷 실루엣 SVG 레이어 */
+        .cloth-layer { position: absolute; left: 50%; transform: translateX(-50%); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
+        .active-cloth { opacity: 1; transform: translateX(-50%) scale(1); }
 
-        /* 부위별 정밀 좌표 (실제 옷 주름과 핏 반영) */
-        #top-fit { top: 75px; width: 240px; z-index: 10; transform: translateX(-50%) translateY(-20px); }
-        #bottom-fit { top: 185px; width: 180px; z-index: 5; transform: translateX(-50%) translateY(20px); }
-        #shoes-fit { top: 385px; width: 140px; z-index: 15; }
+        #top-layer { top: 90px; width: 210px; z-index: 10; }
+        #bottom-layer { top: 195px; width: 160px; z-index: 5; }
+        #shoes-layer { top: 355px; width: 130px; z-index: 15; }
 
         .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
@@ -38,60 +29,68 @@
 
     <header class="text-center my-6 flex items-center justify-center">
         <span class="chan-doong-signature">찬둥의</span>
-        <h1 class="text-3xl font-black text-rose- Rose-600 italic tracking-tighter uppercase">MAGIC FIT</h1>
+        <h1 class="text-3xl font-black text-rose-600 italic tracking-tighter uppercase">MAGIC FIT</h1>
     </header>
 
-    <div class="w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-8 mb-8 border-b-[15px] border-rose-200 text-center relative overflow-hidden">
-        <div class="fitting-room">
-            <div id="top-fit" class="cloth-layer"></div>
-            <div id="bottom-fit" class="cloth-layer"></div>
-            <div id="shoes-fit" class="cloth-layer"></div>
+    <div class="w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-6 mb-8 border-b-[15px] border-rose-300 text-center relative">
+        <div class="mannequin-frame">
+            <div class="head-part"></div>
+            
+            <svg id="top-layer" class="cloth-layer" viewBox="0 0 200 120">
+                <path id="top-path" d="M40,20 Q100,0 160,20 L190,100 L140,100 L135,40 Q100,30 65,40 L60,100 L10,100 Z" stroke="#333" stroke-width="1.5"/>
+            </svg>
+            
+            <svg id="bottom-layer" class="cloth-layer" viewBox="0 0 150 180">
+                <path id="bottom-path" d="M20,0 L130,0 L145,170 L85,170 L75,40 L65,170 L5,170 Z" stroke="#333" stroke-width="1.5"/>
+            </svg>
+            
+            <svg id="shoes-layer" class="cloth-layer" viewBox="0 0 120 40">
+                <path id="shoes-path" d="M10,35 Q10,10 45,10 L105,10 Q115,10 115,35 Z" stroke="#333" stroke-width="1.5"/>
+            </svg>
         </div>
-        <div id="statusMsg" class="mt-8 text-xs font-black text-rose-400 italic">실제 옷의 핏을 확인해보십쇼 형님!</div>
+        <div id="statusMsg" class="mt-6 text-xs font-black text-rose-400 italic italic">엑박 없는 리얼 핏! 조합해보십쇼 형님!</div>
+        <button onclick="location.reload()" class="mt-4 text-[10px] font-bold text-slate-300 uppercase underline">Reset Fitting</button>
     </div>
 
     <div class="w-full max-w-sm grid grid-cols-2 gap-3 mb-10" id="closetList"></div>
 
     <script>
-        // 📸 실제 옷 누끼 이미지 데이터베이스 (형님의 퀄리티를 위해 엄선)
-        const realFoodDB = [
-            {id:1, name:'핑크 가디건', cat:'top', img:'https://i.imgur.com/G4YmX7I.png'},
-            {id:2, name:'블랙 오프숄더', cat:'top', img:'https://i.imgur.com/9vBvL9D.png'},
-            {id:3, name:'청바지(와이드)', cat:'bottom', img:'https://i.imgur.com/9YFjR8K.png'},
-            {id:4, name:'화이트 스커트', cat:'bottom', img:'https://i.imgur.com/7p6BvO8.png'},
-            {id:5, name:'화이트 스니커즈', cat:'shoes', img:'https://i.imgur.com/mOaU9O4.png'},
-            {id:6, name:'블랙 킬힐', cat:'shoes', img:'https://i.imgur.com/SjN9uPz.png'}
+        const clothes = [
+            {id:1, name:'핑크 가디건', cat:'top', color:'#ff99aa'},
+            {id:2, name:'네이비 와이드팬츠', cat:'bottom', color:'#000080'},
+            {id:3, name:'블랙 킬힐', cat:'shoes', color:'#222222'},
+            {id:4, name:'화이트 셔츠', cat:'top', color:'#ffffff'},
+            {id:5, name:'데님 스커트', cat:'bottom', color:'#4682b4'},
+            {id:6, name:'레드 스니커즈', cat:'shoes', color:'#ee4444'}
         ];
 
         function renderCloset() {
             const list = document.getElementById('closetList');
-            realFoodDB.forEach(item => {
+            clothes.forEach(item => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-2xl border border-rose-50 shadow-sm text-center";
+                div.className = "bg-white p-4 rounded-2xl border border-rose-50 shadow-sm text-center animate-in zoom-in";
                 div.innerHTML = `
-                    <div class="w-full h-24 bg-slate-50 rounded-lg mb-2 overflow-hidden flex items-center justify-center">
-                        <img src="${item.img}" class="h-full object-contain p-2">
+                    <div class="w-full h-12 rounded-lg mb-2 border flex items-center justify-center" style="background:${item.color}">
+                        <span class="text-[9px] font-black uppercase opacity-30">${item.cat}</span>
                     </div>
-                    <p class="font-bold text-slate-700 text-[11px] mb-2">${item.name}</p>
-                    <button onclick="realWear('${item.cat}', '${item.img}')" class="w-full bg-rose-500 text-white py-2 rounded-lg text-[10px] font-black uppercase active:scale-95 transition">Fit It</button>
+                    <p class="font-bold text-slate-700 text-xs mb-3 truncate">${item.name}</p>
+                    <button onclick="fitIt('${item.cat}', '${item.color}')" class="w-full bg-rose-500 text-white py-2 rounded-lg text-[10px] font-black uppercase active:scale-95 transition">Fit It</button>
                 `;
                 list.appendChild(div);
             });
         }
 
-        function realWear(cat, imgUrl) {
-            const layer = document.getElementById(`${cat}-fit`);
-            layer.innerHTML = `<img src="${imgUrl}">`;
+        function fitIt(cat, color) {
+            const layer = document.getElementById(`${cat}-layer`);
+            const path = document.getElementById(`${cat}-path`);
             
-            // 애니메이션을 위해 강제 리플로우 후 클래스 추가
-            layer.classList.remove('show');
-            void layer.offsetWidth; 
-            layer.classList.add('show');
+            path.setAttribute('fill', color);
+            layer.classList.add('active-cloth');
 
-            const dressed = document.querySelectorAll('.show').length;
+            const dressed = document.querySelectorAll('.active-cloth').length;
             if(dressed >= 3) {
-                document.getElementById('statusMsg').innerText = "✨ 형님, 이 조합은 진짜 모델 같네요! ✨";
-                document.getElementById('statusMsg').className = "mt-8 text-sm font-black text-rose-600 animate-pulse";
+                document.getElementById('statusMsg').innerText = "✨ 형님, 이 코디 미쳤습니다! 예술이네요! ✨";
+                document.getElementById('statusMsg').className = "mt-6 text-sm font-black text-rose-600 animate-bounce";
             }
         }
 
