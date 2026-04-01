@@ -1,43 +1,50 @@
-const axios = require('axios');
-
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   const { prompt, category } = req.body;
-  
-  // 형님의 진짜 누끼 API 키
-  const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY; 
-
-  if (!REMOVE_BG_KEY) {
-    return res.status(500).json({ error: 'Remove.bg API 키가 Vercel에 없습니다!' });
-  }
+  const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY;
 
   try {
-    // 1. 진짜 AI 이미지 생성 (형님이 입력한 텍스트 기반)
-    // AI가 옷을 잘 그리도록 프롬프트를 영어로 살짝 포장해줍니다.
-    const aiPrompt = encodeURIComponent(`high quality fashion photography, single ${prompt}, isolated on white background, clothing flat lay`);
-    
-    // 무료 & 무제한 AI 이미지 생성 API 호출
+    // 1. 무료 AI로 옷 이미지 실시간 생성 (고화질 프롬프트 적용)
+    const aiPrompt = encodeURIComponent(`high quality fashion, single ${prompt}, white background, isolated, flat lay`);
     const aiImageUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=512&height=512&nologo=true`;
 
-    // 2. 형님의 Remove.bg 키를 써서 배경을 진짜로 날려버림
-    const removeBgResponse = await axios.post('https://api.remove.bg/v1.0/removebg', {
-      image_url: aiImageUrl,
-      size: 'auto',
-      type: 'product' // 상품(옷)에 최적화된 누끼 모드
-    }, {
-      headers: { 'X-Api-Key': REMOVE_BG_KEY },
-      responseType: 'arraybuffer'
+    // 만약 형님이 Vercel에 키를 안 넣었을 경우 엑박 대신 원본이라도 띄움
+    if (!REMOVE_BG_KEY) {
+      return res.status(200).json({ img: aiImageUrl });
+    }
+
+    // 2. Remove.bg API로 누끼 따기 (axios 대신 순정 fetch 사용 = 설치 불필요)
+    const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
+      method: 'POST',
+      headers: {
+        'X-Api-Key': REMOVE_BG_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        image_url: aiImageUrl,
+        size: 'auto',
+        type: 'product' // 옷 누끼에 최적화
+      })
     });
 
-    // 3. 투명해진 PNG 이미지를 프론트엔드(화면)로 쏴줌
-    const base64Image = Buffer.from(removeBgResponse.data, 'binary').toString('base64');
-    const finalTransparentUrl = `data:image/png;base64,${base64Image}`;
+    // 3. 🚨 생존 보험 🚨: 누끼 따는 데 실패하거나 시간이 초과되면 500 에러를 띄우는 대신, 
+    // 방금 AI가 그린 '배경 있는 원본 옷'이라도 마네킹에 보여줍니다.
+    if (!removeBgResponse.ok) {
+      console.log("형님, 누끼 서버가 바쁘답니다. 원본으로 쏩니다!");
+      return res.status(200).json({ img: aiImageUrl });
+    }
 
-    res.status(200).json({ img: finalTransparentUrl });
+    // 4. 누끼 성공 시: 투명 PNG로 변환해서 화면에 착! 입힘
+    const arrayBuffer = await removeBgResponse.arrayBuffer();
+    const base64Image = Buffer.from(arrayBuffer).toString('base64');
+    
+    return res.status(200).json({ img: `data:image/png;base64,${base64Image}` });
 
   } catch (error) {
-    console.error("AI 생성 에러:", error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'AI가 이미지를 만들거나 배경을 지우는 데 실패했습니다.' });
+    console.error("서버 뻗음:", error);
+    return res.status(500).json({ error: '서버 에러 발생' });
   }
-};
+}
