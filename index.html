@@ -3,91 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Coordi Sim - 찬둥 에디션</title>
+    <title>Coordi Sim - 리얼 마네킹</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&family=Nanum+Pen+Script&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #fff1f2; color: #4b5563; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #fff5f7; color: #4b5563; overflow-x: hidden; }
         .chan-doong-signature { font-family: 'Nanum Pen Script', cursive; font-size: 22px; color: #f43f5e; transform: rotate(-10deg) translateY(6px); margin-right: 4px; }
+        
+        /* ✨ 마네킹 시뮬레이션 핵심 스타일 */
+        .mannequin-container { position: relative; width: 220px; height: 350px; background: #ffe4e6; border-radius: 100px 100px 40px 40px; margin: 0 auto; border: 4px solid #fecdd3; overflow: hidden; }
+        .mannequin-head { width: 50px; height: 60px; background: #fda4af; border-radius: 50%; margin: 20px auto 10px; }
+        
+        /* 옷들이 입혀지는 레이어 */
+        .clothing-layer { position: absolute; left: 50%; transform: translateX(-50%); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; font-weight: 900; color: white; padding: 10px; }
+        
+        #layer-top { top: 85px; width: 180px; height: 100px; background: rgba(244, 63, 94, 0.1); border: 2px dashed #fb7185; border-radius: 20px; z-index: 10; }
+        #layer-bottom { top: 180px; width: 140px; height: 120px; background: rgba(244, 63, 94, 0.05); border: 2px dashed #fda4af; border-radius: 10px; z-index: 5; }
+        #layer-shoes { top: 300px; width: 120px; height: 40px; background: rgba(244, 63, 94, 0.05); border: 2px dashed #fecdd3; border-radius: 5px; z-index: 15; }
+
+        /* 옷이 입혀졌을 때의 효과 */
+        .dressed { background: #f43f5e !important; border-style: solid !important; box-shadow: 0 10px 15px -3px rgba(244, 63, 94, 0.4); transform: translateX(-50%) scale(1.05) !important; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .sim-slot { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .sim-active { transform: scale(1.05); background-color: #f43f5e !important; color: white !important; border-style: solid !important; }
     </style>
 </head>
 <body class="p-4 flex flex-col items-center min-h-screen pb-24">
 
     <header class="text-center my-6 flex items-center justify-center">
         <span class="chan-doong-signature">찬둥의</span>
-        <h1 class="text-3xl font-black text-rose-600 italic tracking-tighter leading-none uppercase">Coordi Simulator</h1>
+        <h1 class="text-3xl font-black text-rose-600 italic tracking-tighter uppercase">Coordi Sim</h1>
     </header>
 
-    <div class="w-full max-w-sm bg-white rounded-[2.5rem] shadow-2xl p-8 mb-8 border-b-[12px] border-rose-400 text-center relative">
-        <p class="text-[10px] font-black text-rose-300 uppercase tracking-[0.3em] mb-6 underline decoration-rose-200">Simulation Board</p>
+    <div class="w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-6 mb-8 border-b-[12px] border-rose-300 text-center">
+        <p class="text-[10px] font-black text-rose-300 uppercase tracking-[0.3em] mb-4">Real-fit Simulation</p>
         
-        <div class="flex flex-col items-center gap-2">
-            <div id="sim-top" class="sim-slot w-48 h-16 flex items-center justify-center bg-rose-50 rounded-t-3xl rounded-b-lg text-rose-300 font-bold italic border-2 border-dashed border-rose-200 text-sm px-4">TOP</div>
-            <div id="sim-bottom" class="sim-slot w-40 h-24 flex items-center justify-center bg-rose-50 rounded-lg text-rose-300 font-bold italic border-2 border-dashed border-rose-200 text-sm px-4">BOTTOM</div>
-            <div id="sim-shoes" class="sim-slot w-32 h-12 flex items-center justify-center bg-rose-50 rounded-t-lg rounded-b-3xl text-rose-300 font-bold italic border-2 border-dashed border-rose-200 text-sm px-4">SHOES</div>
+        <div class="mannequin-container shadow-inner">
+            <div class="mannequin-head"></div>
+            <div id="layer-top" class="clothing-layer">상의 선택</div>
+            <div id="layer-bottom" class="clothing-layer">하의 선택</div>
+            <div id="layer-shoes" class="clothing-layer">신발 선택</div>
         </div>
 
-        <div id="statusMsg" class="mt-6 text-xs font-black text-rose-400 italic min-h-[1rem]">코디를 조합해보십쇼 형님!</div>
-        <button onclick="resetCoordi()" class="mt-4 text-[10px] font-bold text-slate-300 uppercase hover:text-rose-400 transition">Clear All</button>
+        <div id="statusMsg" class="mt-6 text-xs font-black text-rose-400 italic italic">조합을 완성해보십쇼!</div>
+        <button onclick="location.reload()" class="mt-4 text-[10px] font-bold text-slate-300 uppercase underline">Reset Fitting</button>
     </div>
 
-    <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-md mb-6 border border-rose-100">
-        <div class="flex gap-2 mb-3">
-            <input type="text" id="itemName" placeholder="옷 이름 (예: 청바지)" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-rose-400 font-semibold text-black">
-            <select id="itemCategory" class="w-24 p-3 border rounded-xl text-xs bg-slate-50 outline-none font-bold text-rose-500">
+    <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-lg mb-6 border border-rose-50">
+        <div class="flex gap-2">
+            <input type="text" id="itemName" placeholder="옷 이름 (예: 청바지)" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-rose-400 font-bold">
+            <select id="itemCat" class="w-20 p-3 border rounded-xl text-xs bg-slate-50 font-bold text-rose-500">
                 <option value="top">상의</option>
                 <option value="bottom">하의</option>
                 <option value="shoes">신발</option>
             </select>
+            <button onclick="addItem()" class="bg-slate-800 text-white px-4 rounded-xl font-black text-xs active:scale-95 transition">추가</button>
         </div>
-        <button onclick="addItem()" class="w-full bg-slate-800 text-white p-3 rounded-xl font-black text-sm active:scale-95 transition shadow-lg uppercase italic tracking-tighter">Add to Dressroom</button>
     </div>
 
     <div class="w-full max-w-sm flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
-        <button onclick="filterCloset('all')" class="px-5 py-2.5 bg-rose-500 text-white rounded-full text-[11px] font-black italic shadow-lg">ALL</button>
-        <button onclick="filterCloset('top')" class="px-5 py-2.5 bg-white text-rose-500 rounded-full text-[11px] font-black italic shadow-sm border border-rose-100">TOP</button>
-        <button onclick="filterCloset('bottom')" class="px-5 py-2.5 bg-white text-rose-500 rounded-full text-[11px] font-black italic shadow-sm border border-rose-100">BOTTOM</button>
-        <button onclick="filterCloset('shoes')" class="px-5 py-2.5 bg-white text-rose-500 rounded-full text-[11px] font-black italic shadow-sm border border-rose-100">SHOES</button>
+        <button onclick="renderCloset('all')" class="px-5 py-2 bg-rose-500 text-white rounded-full text-[10px] font-black italic">ALL</button>
+        <button onclick="renderCloset('top')" class="px-5 py-2 bg-white text-rose-500 rounded-full text-[10px] font-black italic shadow-sm border border-rose-100">TOP</button>
+        <button onclick="renderCloset('bottom')" class="px-5 py-2 bg-white text-rose-500 rounded-full text-[10px] font-black italic shadow-sm border border-rose-100">BOTTOM</button>
+        <button onclick="renderCloset('shoes')" class="px-5 py-2 bg-white text-rose-500 rounded-full text-[10px] font-black italic shadow-sm border border-rose-100">SHOES</button>
     </div>
 
-    <div class="w-full max-w-sm grid grid-cols-2 gap-4 mb-12" id="closetList"></div>
-
-    <div class="w-full max-w-sm space-y-6 mb-10">
-        <div class="text-center">
-            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-8 py-4 rounded-2xl font-black text-xs shadow-md active:scale-95 transition">
-                ☕ 찬둥에게 커피 후원하기
-            </a>
-        </div>
-        <div class="bg-white border border-rose-100 rounded-[2rem] p-6 shadow-sm text-center">
-            <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
-                <input type="hidden" name="channel" value="AF4757238">
-                <input type="text" name="q" placeholder="이 코디에 어울리는 가방 검색" class="flex-grow p-3 border rounded-xl text-xs bg-slate-50 outline-none text-black font-semibold">
-                <button type="submit" class="bg-rose-500 text-white px-4 rounded-xl font-bold text-xs active:scale-95 transition">검색</button>
-            </form>
-            <p class="text-[9px] text-rose-300 mt-3 font-medium">"이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다."</p>
-        </div>
-    </div>
+    <div class="w-full max-w-sm grid grid-cols-2 gap-3 mb-10" id="closetList"></div>
 
     <script>
-        let closet = JSON.parse(localStorage.getItem('chan_closet')) || [
-            {id: 1, name: '크롭 티셔츠', category: 'top'},
-            {id: 2, name: '와이드 데님', category: 'bottom'},
-            {id: 3, name: '컨버스 하이', category: 'shoes'}
+        let closet = JSON.parse(localStorage.getItem('chan_closet_v2')) || [
+            {id:1, name:'핑크 가디건', category:'top'}, {id:2, name:'와이드 청바지', category:'bottom'}, {id:3, name:'반스 어센틱', category:'shoes'}
         ];
 
-        let currentSim = { top: null, bottom: null, shoes: null };
-
         function addItem() {
-            const name = document.getElementById('itemName').value.trim();
-            const category = document.getElementById('itemCategory').value;
-            if(!name) return alert("옷 이름을 적어주십쇼!");
-            const newItem = { id: Date.now(), name, category };
-            closet.push(newItem);
-            localStorage.setItem('chan_closet', JSON.stringify(closet));
+            const name = document.getElementById('itemName').value;
+            const category = document.getElementById('itemCat').value;
+            if(!name) return;
+            closet.push({id: Date.now(), name, category});
+            localStorage.setItem('chan_closet_v2', JSON.stringify(closet));
             renderCloset('all');
             document.getElementById('itemName').value = '';
         }
@@ -96,50 +88,30 @@
             const list = document.getElementById('closetList');
             list.innerHTML = '';
             const filtered = filter === 'all' ? closet : closet.filter(i => i.category === filter);
-
             filtered.forEach(item => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-5 rounded-3xl shadow-sm border border-rose-50 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-2 duration-300";
+                div.className = "bg-white p-4 rounded-2xl border border-rose-50 shadow-sm text-center animate-in zoom-in duration-300";
                 div.innerHTML = `
-                    <p class="text-[8px] font-black text-rose-300 uppercase mb-1 tracking-widest">${item.category}</p>
-                    <p class="font-bold text-slate-700 text-xs mb-4 h-8 overflow-hidden line-clamp-2">${item.name}</p>
-                    <div class="flex gap-2">
-                        <button onclick="simulate('${item.category}', '${item.name}')" class="bg-rose-50 text-rose-500 border border-rose-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase active:bg-rose-500 active:text-white transition-all">Select</button>
-                        <button onclick="deleteItem(${item.id})" class="text-slate-200 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    </div>`;
+                    <p class="text-[8px] font-black text-rose-300 uppercase mb-1">${item.category}</p>
+                    <p class="font-bold text-slate-700 text-xs mb-3 truncate">${item.name}</p>
+                    <button onclick="wear('${item.category}', '${item.name}')" class="bg-rose-50 text-rose-600 px-4 py-1.5 rounded-lg text-[10px] font-black active:bg-rose-500 active:text-white transition">입어보기</button>
+                `;
                 list.appendChild(div);
             });
-            lucide.createIcons();
         }
 
-        function simulate(category, name) {
-            const slot = document.getElementById(`sim-${category}`);
-            slot.innerText = name;
-            slot.classList.add('sim-active');
-            currentSim[category] = name;
-            checkComplete();
-        }
-
-        function checkComplete() {
-            const msg = document.getElementById('statusMsg');
-            if(currentSim.top && currentSim.bottom && currentSim.shoes) {
-                msg.innerText = "✨ 대박! 오늘 코디 완전 찢었습니다 형님! ✨";
-                msg.className = "mt-6 text-sm font-black text-rose-600 animate-bounce italic";
-            } else {
-                msg.innerText = "조금만 더 조합해 보십쇼!";
+        function wear(cat, name) {
+            const layer = document.getElementById(`layer-${cat}`);
+            layer.innerText = name;
+            layer.classList.add('dressed');
+            
+            // 다 입었는지 체크
+            const dressedCount = document.querySelectorAll('.dressed').length;
+            if(dressedCount >= 3) {
+                document.getElementById('statusMsg').innerText = "✨ 형수님, 오늘 코디가 예술입니다! ✨";
+                document.getElementById('statusMsg').className = "mt-6 text-sm font-black text-rose-600 animate-bounce";
             }
         }
-
-        function deleteItem(id) {
-            if(confirm("이 옷을 삭제할까요?")) {
-                closet = closet.filter(i => i.id !== id);
-                localStorage.setItem('chan_closet', JSON.stringify(closet));
-                renderCloset('all');
-            }
-        }
-
-        function filterCloset(cat) { renderCloset(cat); }
-        function resetCoordi() { location.reload(); }
 
         renderCloset('all');
     </script>
