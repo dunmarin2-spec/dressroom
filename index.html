@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Digital Dressroom - 찬둥 에디션</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&family=Nanum+Pen+Script&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #fff1f2; color: #4b5563; -webkit-tap-highlight-color: transparent; }
+        .chan-doong-signature { font-family: 'Nanum Pen Script', cursive; font-size: 22px; color: #f43f5e; transform: rotate(-10deg) translateY(6px); margin-right: 4px; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .closet-item { transition: all 0.2s ease-out; }
+        .closet-item:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="p-4 flex flex-col items-center min-h-screen pb-24">
+
+    <header class="text-center my-8 flex items-center justify-center">
+        <span class="chan-doong-signature">찬둥의</span>
+        <h1 class="text-3xl font-black text-rose-600 italic tracking-tighter leading-none uppercase">Digital Dressroom</h1>
+    </header>
+
+    <div class="w-full max-w-sm bg-white rounded-[2.5rem] shadow-xl p-6 mb-8 border-b-[10px] border-rose-300 text-center relative">
+        <p class="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] mb-4">Today's Mix & Match</p>
+        <div class="space-y-2">
+            <div id="view-top" class="h-16 flex items-center justify-center bg-rose-50 rounded-2xl text-rose-400 font-bold italic border-2 border-dashed border-rose-200">상의를 선택하세요</div>
+            <div id="view-bottom" class="h-16 flex items-center justify-center bg-rose-50 rounded-2xl text-rose-400 font-bold italic border-2 border-dashed border-rose-200">하의를 선택하세요</div>
+            <div id="view-shoes" class="h-16 flex items-center justify-center bg-rose-50 rounded-2xl text-rose-400 font-bold italic border-2 border-dashed border-rose-200">신발을 선택하세요</div>
+        </div>
+        <button onclick="resetCoordi()" class="mt-4 text-[10px] font-bold text-slate-300 uppercase underline">Reset Match</button>
+    </div>
+
+    <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-md mb-6 border border-rose-100">
+        <div class="flex gap-2 mb-3">
+            <input type="text" id="itemName" placeholder="옷 이름 (예: 흰색 셔츠)" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none focus:ring-2 focus:ring-rose-400 font-semibold text-black">
+            <select id="itemCategory" class="w-24 p-3 border rounded-xl text-xs bg-slate-50 outline-none font-bold text-rose-500">
+                <option value="top">상의</option>
+                <option value="bottom">하의</option>
+                <option value="shoes">신발</option>
+            </select>
+        </div>
+        <button onclick="addItem()" class="w-full bg-rose-500 text-white p-3 rounded-xl font-black text-sm active:scale-95 transition shadow-lg shadow-rose-200 uppercase italic">Add to Closet</button>
+    </div>
+
+    <div class="w-full max-w-sm flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
+        <button onclick="filterCloset('all')" class="px-4 py-2 bg-rose-600 text-white rounded-full text-xs font-black italic">ALL</button>
+        <button onclick="filterCloset('top')" class="px-4 py-2 bg-white text-rose-500 rounded-full text-xs font-black italic shadow-sm border border-rose-100">TOP</button>
+        <button onclick="filterCloset('bottom')" class="px-4 py-2 bg-white text-rose-500 rounded-full text-xs font-black italic shadow-sm border border-rose-100">BOTTOM</button>
+        <button onclick="filterCloset('shoes')" class="px-4 py-2 bg-white text-rose-500 rounded-full text-xs font-black italic shadow-sm border border-rose-100">SHOES</button>
+    </div>
+
+    <div class="w-full max-w-sm grid grid-cols-2 gap-3 mb-10" id="closetList">
+        </div>
+
+    <div class="w-full max-w-sm space-y-6 mt-4 mb-10">
+        <div class="text-center">
+            <a href="https://qr.kakaopay.com/FRK8J0SAD" target="_blank" class="inline-flex items-center gap-2 bg-[#FAE100] text-[#3C1E1E] px-8 py-4 rounded-2xl font-black text-sm shadow-md active:scale-95 transition">
+                <i data-lucide="coffee" class="w-5 h-5"></i> 찬둥에게 커피 후원하기
+            </a>
+        </div>
+        <div class="bg-white border border-rose-100 rounded-3xl p-5 shadow-sm">
+            <form action="https://www.coupang.com/np/search" method="get" target="_blank" class="flex gap-2">
+                <input type="hidden" name="channel" value="AF4757238">
+                <input type="text" name="q" placeholder="신상 원피스/슈즈 최저가 검색" class="flex-grow p-3 border rounded-xl text-sm bg-slate-50 outline-none text-black font-semibold">
+                <button type="submit" class="bg-rose-500 text-white px-4 rounded-xl font-bold text-xs active:scale-95 transition">검색</button>
+            </form>
+            <p class="text-[9px] text-rose-300 mt-3 text-center leading-tight">"이 포스팅은 쿠팡 파트너스 활동의 일환으로 수수료를 제공받습니다."</p>
+        </div>
+    </div>
+
+    <script>
+        let closet = JSON.parse(localStorage.getItem('chan_closet')) || [
+            {id: 1, name: '기본 화이트 티셔츠', category: 'top'},
+            {name: '생지 데님 팬츠', category: 'bottom'},
+            {name: '깔끔한 스니커즈', category: 'shoes'}
+        ];
+
+        function addItem() {
+            const name = document.getElementById('itemName').value.trim();
+            const category = document.getElementById('itemCategory').value;
+            if(!name) { alert("옷 이름을 입력하십쇼 형님!"); return; }
+
+            const newItem = { id: Date.now(), name, category };
+            closet.push(newItem);
+            saveCloset();
+            renderCloset('all');
+            document.getElementById('itemName').value = '';
+        }
+
+        function renderCloset(filter) {
+            const list = document.getElementById('closetList');
+            list.innerHTML = '';
+            
+            const filtered = filter === 'all' ? closet : closet.filter(i => i.category === filter);
+
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-2xl shadow-sm border border-rose-50 closet-item text-center relative";
+                div.innerHTML = `
+                    <p class="text-[10px] font-black text-rose-300 uppercase mb-1">${item.category}</p>
+                    <p class="font-bold text-slate-700 text-sm mb-3 truncate">${item.name}</p>
+                    <div class="flex gap-1 justify-center">
+                        <button onclick="selectForPreview('${item.category}', '${item.name}')" class="bg-rose-100 text-rose-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Select</button>
+                        <button onclick="deleteItem(${item.id})" class="text-slate-200 hover:text-rose-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function selectForPreview(category, name) {
+            const target = document.getElementById(`view-${category}`);
+            target.innerText = name;
+            target.className = "h-16 flex items-center justify-center bg-rose-500 text-white rounded-2xl font-black italic shadow-inner animate-in zoom-in duration-200 px-4 text-center text-sm";
+        }
+
+        function deleteItem(id) {
+            if(confirm("이 옷을 옷장에서 뺄까요?")) {
+                closet = closet.filter(i => i.id !== id);
+                saveCloset();
+                renderCloset('all');
+            }
+        }
+
+        function saveCloset() { localStorage.setItem('chan_closet', JSON.stringify(closet)); }
+        function filterCloset(cat) { renderCloset(cat); }
+        function resetCoordi() { location.reload(); }
+
+        renderCloset('all');
+    </script>
+</body>
+</html>
