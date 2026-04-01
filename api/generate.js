@@ -6,17 +6,27 @@ export default async function handler(req, res) {
   const { prompt, category } = req.body;
   const REMOVE_BG_KEY = process.env.REMOVE_BG_KEY;
 
+  if (!REMOVE_BG_KEY) {
+    return res.status(500).json({ error: 'Vercel 환경 변수에 키가 없습니다.' });
+  }
+
   try {
-    // 1. 무료 AI로 옷 이미지 실시간 생성 (고화질 프롬프트 적용)
-    const aiPrompt = encodeURIComponent(`high quality fashion, single ${prompt}, white background, isolated, flat lay`);
-    const aiImageUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=512&height=512&nologo=true`;
+    // 💡 마법 1: 매번 새로운 그림을 강제로 그리게 만드는 랜덤 번호
+    const randomSeed = Math.floor(Math.random() * 1000000);
 
-    // 만약 형님이 Vercel에 키를 안 넣었을 경우 엑박 대신 원본이라도 띄움
-    if (!REMOVE_BG_KEY) {
-      return res.status(200).json({ img: aiImageUrl });
-    }
+    // 💡 마법 2: 카테고리에 따라 AI에게 명확한 '영어 키워드'를 쥐여줍니다.
+    let catKeyword = "";
+    if(category === "top") catKeyword = "shirt, jacket, top garment";
+    if(category === "bottom") catKeyword = "pants, skirt, trousers, bottom garment";
+    if(category === "shoes") catKeyword = "pair of shoes, sneakers";
 
-    // 2. Remove.bg API로 누끼 따기 (axios 대신 순정 fetch 사용 = 설치 불필요)
+    // 💡 마법 3: "사람 몸 절대 그리지 마! 옷만 그려!" (no human body, flat lay)
+    const aiPrompt = encodeURIComponent(`high quality product photography, flat lay, single ${catKeyword} matching this description: ${prompt}, isolated on pure white background, no human body, no mannequin, clear edges`);
+    
+    // URL 끝에 &seed=랜덤번호 를 붙여서 무조건 새로 그리게 만듭니다.
+    const aiImageUrl = `https://image.pollinations.ai/prompt/${aiPrompt}?width=512&height=512&nologo=true&seed=${randomSeed}`;
+
+    // Remove.bg 로 누끼 따기 시작
     const removeBgResponse = await fetch('https://api.remove.bg/v1.0/removebg', {
       method: 'POST',
       headers: {
@@ -26,18 +36,15 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         image_url: aiImageUrl,
         size: 'auto',
-        type: 'product' // 옷 누끼에 최적화
+        type: 'product' // 무조건 '상품' 모드로 강제
       })
     });
 
-    // 3. 🚨 생존 보험 🚨: 누끼 따는 데 실패하거나 시간이 초과되면 500 에러를 띄우는 대신, 
-    // 방금 AI가 그린 '배경 있는 원본 옷'이라도 마네킹에 보여줍니다.
     if (!removeBgResponse.ok) {
-      console.log("형님, 누끼 서버가 바쁘답니다. 원본으로 쏩니다!");
+      // 누끼 서버가 파업해도 방금 그린 원본은 무조건 살려서 보냅니다!
       return res.status(200).json({ img: aiImageUrl });
     }
 
-    // 4. 누끼 성공 시: 투명 PNG로 변환해서 화면에 착! 입힘
     const arrayBuffer = await removeBgResponse.arrayBuffer();
     const base64Image = Buffer.from(arrayBuffer).toString('base64');
     
