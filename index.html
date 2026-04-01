@@ -3,56 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI MAGIC FIT - 찬둥 곤조 에디션</title>
+    <title>AI MAGIC FIT - 최종 정석 에디션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@900&display=swap');
         body { font-family: 'Pretendard', sans-serif; background-color: #fff5f7; }
         
-        /* 🧍 피팅룸 메인 프레임 */
         .fitting-room { 
-            position: relative; 
-            width: 300px; 
-            height: 480px; 
-            background: #ffffff; 
-            border-radius: 60px; 
-            border: 10px solid #fff; 
-            margin: 0 auto; 
-            overflow: hidden; 
-            box-shadow: 0 30px 60px rgba(244, 63, 94, 0.2); 
+            position: relative; width: 300px; height: 500px; 
+            background: #ffffff; border-radius: 60px; border: 10px solid #fff; 
+            margin: 0 auto; overflow: hidden; box-shadow: 0 30px 60px rgba(244, 63, 94, 0.2); 
         }
 
-        /* 레이어 공통 설정 (중첩을 위해 absolute) */
-        .layer { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            pointer-events: none; /* 클릭 방해 금지 */
+        .base-mannequin { 
+            position: absolute; top: 10%; left: 0; width: 100%; height: 80%; 
+            z-index: 10; opacity: 0.15; fill: #f43f5e; display: flex; justify-content: center; 
         }
 
-        /* 층별 우선순위 (Z-Index) */
-        .base-mannequin { z-index: 10; opacity: 0.1; fill: #f43f5e; } /* 마네킹 (가장 뒤) */
-        #bottom-fit { z-index: 20; } /* 하의 */
-        #top-fit { z-index: 30; }    /* 상의 (하의 위로) */
-        #shoes-fit { z-index: 40; }  /* 신발 (가장 위) */
+        /* 👕 핏 강제 고정 (마네킹 몸매에 딱 맞게) */
+        .layer { position: absolute; left: 0; width: 100%; display: flex; justify-content: center; pointer-events: none; }
+        #top-fit { top: 15%; height: 42%; z-index: 30; }     
+        #bottom-fit { top: 43%; height: 50%; z-index: 20; }  
+        #shoes-fit { top: 86%; height: 12%; z-index: 40; }   
 
-        .cloth-img { width: 100%; height: 100%; object-fit: contain; }
-
-        /* 로딩 스피너 */
-        .loader { 
-            border: 3px solid #f3f3f3; 
-            border-top: 3px solid #f43f5e; 
-            border-radius: 50%; 
-            width: 18px; 
-            height: 18px; 
-            animation: spin 1s linear infinite; 
-            display: none; 
+        .cloth-img { 
+            width: 90%; height: 100%; object-fit: contain; 
+            filter: drop-shadow(2px 8px 6px rgba(0,0,0,0.25)); 
         }
+
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #f43f5e; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -61,70 +40,65 @@
     <h1 class="text-4xl font-black text-rose-600 mb-8 italic uppercase tracking-tighter">AI MAGIC FIT</h1>
 
     <div class="fitting-room mb-8">
-        <div class="layer base-mannequin">
-            <svg viewBox="0 0 100 200" style="width: 200px; height: 400px;">
-                <circle cx="50" cy="25" r="15" />
-                <path d="M20,50 Q50,40 80,50 L75,100 Q50,90 25,100 Z" />
-                <path d="M25,105 L75,105 L80,180 Q50,190 20,180 Z" />
+        <div class="base-mannequin">
+            <svg viewBox="0 0 100 200" style="height: 100%;">
+                <circle cx="50" cy="20" r="13" />
+                <path d="M25,45 Q50,35 75,45 L70,95 Q50,85 30,95 Z" />
+                <path d="M30,100 L70,100 L75,180 Q50,190 25,180 Z" />
             </svg>
         </div>
-        
         <div id="bottom-fit" class="layer"></div>
         <div id="top-fit" class="layer"></div>
         <div id="shoes-fit" class="layer"></div>
     </div>
 
     <div class="w-full max-w-sm space-y-4 bg-white p-6 rounded-[2.5rem] shadow-xl">
-        <div class="space-y-2">
-            <label class="text-[10px] font-black text-rose-400 ml-2 uppercase">What to wear?</label>
-            <input type="text" id="clothInput" placeholder="예: 핑크색 가디건" 
-                class="w-full p-4 rounded-2xl bg-rose-50 border-none font-bold text-sm outline-none focus:ring-2 focus:ring-rose-400 transition">
-        </div>
-
+        <input type="text" id="clothInput" placeholder="예: 화이트 스니커즈" class="w-full p-4 rounded-2xl bg-rose-50 font-bold text-sm outline-none focus:ring-2 focus:ring-rose-400">
         <div class="flex gap-2">
-            <select id="catSelect" class="flex-grow p-4 rounded-2xl bg-slate-50 border-none font-bold text-rose-500 text-xs outline-none">
+            <select id="catSelect" class="flex-grow p-4 rounded-2xl bg-slate-50 font-bold text-rose-500 text-xs outline-none">
                 <option value="top">상의 (TOP)</option>
                 <option value="bottom">하의 (BOTTOM)</option>
                 <option value="shoes">신발 (SHOES)</option>
             </select>
-            
             <button onclick="makeMagic()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs active:scale-95 transition flex items-center justify-center gap-2">
-                <span>생성</span>
-                <div id="spinner" class="loader"></div>
+                <span>생성</span><div id="spinner" class="loader"></div>
             </button>
         </div>
     </div>
 
-    <p class="mt-8 text-[10px] text-slate-300 font-bold uppercase tracking-widest">Powered by Chan-Doong AI</p>
-
-<script>
-    async function makeMagic() {
-        const prompt = document.querySelector('#clothInput').value;
-        const category = document.querySelector('#catSelect').value;
-        const spinner = document.querySelector('#spinner');
-        
-        if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
-        spinner.style.display = 'inline-block';
-        
-        try {
-            const response = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, category })
-            });
+    <script>
+        async function makeMagic() {
+            const prompt = document.querySelector('#clothInput').value;
+            const category = document.querySelector('#catSelect').value;
+            const spinner = document.querySelector('#spinner');
             
-            const data = await response.json();
-            if(data.img) {
-                const target = document.getElementById(`${category}-fit`);
-                // 이미지가 영역에 꽉 차게, 그리고 배경이 투명하지 않아도 잘 보이게 수정
-                target.innerHTML = `<img src="${data.img}" style="width:80%; height:80%; object-fit:contain; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1);" class="animate-in zoom-in duration-700">`;
+            if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
+            spinner.style.display = 'inline-block';
+            
+            try {
+                // 철저하게 숨겨진 Vercel 서버로 요청을 보냅니다.
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, category })
+                });
+                
+                if (!response.ok) throw new Error("서버 응답 오류");
+
+                const data = await response.json();
+                
+                if(data.img) {
+                    const targetLayer = document.getElementById(`${category}-fit`);
+                    targetLayer.innerHTML = `<img src="${data.img}" class="cloth-img animate-in zoom-in duration-700">`;
+                }
+
+            } catch (e) {
+                console.error(e);
+                alert("형님, 이미지를 생성하는 데 시간이 너무 걸려 실패했습니다. 다시 시도해주십쇼.");
+            } finally {
+                spinner.style.display = 'none';
             }
-        } catch (e) {
-            alert("연결 실패!");
-        } finally {
-            spinner.style.display = 'none';
         }
-    }
-</script>
+    </script>
 </body>
 </html>
