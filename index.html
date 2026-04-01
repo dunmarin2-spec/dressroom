@@ -66,39 +66,48 @@
         </div>
     </div>
 
-    <script>
-        async function makeMagic() {
-            const prompt = document.querySelector('#clothInput').value;
-            const category = document.querySelector('#catSelect').value;
-            const spinner = document.querySelector('#spinner');
+<script>
+    async function makeMagic() {
+        const prompt = document.querySelector('#clothInput').value;
+        const category = document.querySelector('#catSelect').value;
+        const spinner = document.querySelector('#spinner');
+        
+        if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
+        
+        // 로딩 시작
+        spinner.style.display = 'inline-block';
+        console.log(`🚀 [요청 시작] ${prompt} (${category}) 그려오라고 서버에 시켰습니다.`);
+        
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, category })
+            });
             
-            if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
-            spinner.style.display = 'inline-block';
-            
-            try {
-                // 철저하게 숨겨진 Vercel 서버로 요청을 보냅니다.
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, category })
-                });
-                
-                if (!response.ok) throw new Error("서버 응답 오류");
+            console.log(`📥 [서버 응답 상태] 코드: ${response.status}`);
 
-                const data = await response.json();
-                
-                if(data.img) {
-                    const targetLayer = document.getElementById(`${category}-fit`);
-                    targetLayer.innerHTML = `<img src="${data.img}" class="cloth-img animate-in zoom-in duration-700">`;
-                }
-
-            } catch (e) {
-                console.error(e);
-                alert("형님, 이미지를 생성하는 데 시간이 너무 걸려 실패했습니다. 다시 시도해주십쇼.");
-            } finally {
-                spinner.style.display = 'none';
+            // 10초 제한 걸려서 서버가 죽었을 때 (504 Gateway Timeout 등)
+            if (!response.ok) {
+                throw new Error(`서버가 죽었습니다. (에러 코드: ${response.status})`);
             }
+
+            const data = await response.json();
+            
+            if(data.img) {
+                console.log("✅ [성공] 이미지 도착 완료! 마네킹에 입힙니다.");
+                const targetLayer = document.getElementById(`${category}-fit`);
+                targetLayer.innerHTML = `<img src="${data.img}" class="cloth-img animate-in zoom-in duration-700">`;
+            }
+
+        } catch (e) {
+            console.error("❌ [에러 발생]", e);
+            alert("형님! AI가 그림을 그리다가 10초가 넘어서 Vercel 서버가 강제로 셔터를 내렸습니다. 다시 한 번 눌러보십쇼!");
+        } finally {
+            // 성공하든 실패하든 스피너는 무조건 끕니다.
+            spinner.style.display = 'none';
         }
-    </script>
+    }
+</script>
 </body>
 </html>
