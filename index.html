@@ -3,28 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI MAGIC FIT - 찬둥</title>
+    <title>AI MAGIC FIT - 찬둥 곤조 에디션</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@900&display=swap');
-        body { font-family: 'Pretendard', sans-serif; }
-        .fitting-room { position: relative; width: 280px; height: 450px; background: #fff1f2; border-radius: 50px; border: 8px solid #fff; margin: 0 auto; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .layer { position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: contain; display: flex; align-items: center; justify-content: center; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #fff5f7; }
         
-        /* ✨ 코딩으로 만든 절대 안 깨지는 마네킹 실루엣 */
-        .mannequin-svg { width: 180px; height: 350px; opacity: 0.15; fill: #f43f5e; }
-        
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #f43f5e; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        /* 🧍 피팅룸 메인 프레임 */
+        .fitting-room { 
+            position: relative; 
+            width: 300px; 
+            height: 480px; 
+            background: #ffffff; 
+            border-radius: 60px; 
+            border: 10px solid #fff; 
+            margin: 0 auto; 
+            overflow: hidden; 
+            box-shadow: 0 30px 60px rgba(244, 63, 94, 0.2); 
+        }
+
+        /* 레이어 공통 설정 (중첩을 위해 absolute) */
+        .layer { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            pointer-events: none; /* 클릭 방해 금지 */
+        }
+
+        /* 층별 우선순위 (Z-Index) */
+        .base-mannequin { z-index: 10; opacity: 0.1; fill: #f43f5e; } /* 마네킹 (가장 뒤) */
+        #bottom-fit { z-index: 20; } /* 하의 */
+        #top-fit { z-index: 30; }    /* 상의 (하의 위로) */
+        #shoes-fit { z-index: 40; }  /* 신발 (가장 위) */
+
+        .cloth-img { width: 100%; height: 100%; object-fit: contain; }
+
+        /* 로딩 스피너 */
+        .loader { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #f43f5e; 
+            border-radius: 50%; 
+            width: 18px; 
+            height: 18px; 
+            animation: spin 1s linear infinite; 
+            display: none; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-rose-50 p-6 flex flex-col items-center">
-    <h1 class="text-3xl font-black text-rose-600 mb-8 italic uppercase tracking-tighter">AI MAGIC FIT</h1>
+<body class="p-6 flex flex-col items-center min-h-screen">
+    
+    <h1 class="text-4xl font-black text-rose-600 mb-8 italic uppercase tracking-tighter">AI MAGIC FIT</h1>
 
-    <div class="fitting-room mb-6">
-        <div class="layer">
-            <svg class="mannequin-svg" viewBox="0 0 100 200">
-                <circle cx="50" cy="25" r="15" /> <path d="M20,50 Q50,40 80,50 L75,100 Q50,90 25,100 Z" /> <path d="M25,105 L75,105 L80,180 Q50,190 20,180 Z" /> </svg>
+    <div class="fitting-room mb-8">
+        <div class="layer base-mannequin">
+            <svg viewBox="0 0 100 200" style="width: 200px; height: 400px;">
+                <circle cx="50" cy="25" r="15" />
+                <path d="M20,50 Q50,40 80,50 L75,100 Q50,90 25,100 Z" />
+                <path d="M25,105 L75,105 L80,180 Q50,190 20,180 Z" />
+            </svg>
         </div>
         
         <div id="bottom-fit" class="layer"></div>
@@ -32,43 +74,68 @@
         <div id="shoes-fit" class="layer"></div>
     </div>
 
-    <div class="w-full max-w-sm space-y-4">
-        <input type="text" id="clothInput" placeholder="예: 핑크색 가디건" class="w-full p-4 rounded-2xl border-none shadow-lg font-bold text-sm outline-none focus:ring-2 focus:ring-rose-400">
+    <div class="w-full max-w-sm space-y-4 bg-white p-6 rounded-[2.5rem] shadow-xl">
+        <div class="space-y-2">
+            <label class="text-[10px] font-black text-rose-400 ml-2 uppercase">What to wear?</label>
+            <input type="text" id="clothInput" placeholder="예: 핑크색 가디건" 
+                class="w-full p-4 rounded-2xl bg-rose-50 border-none font-bold text-sm outline-none focus:ring-2 focus:ring-rose-400 transition">
+        </div>
+
         <div class="flex gap-2">
-            <select id="catSelect" class="flex-grow p-3 rounded-xl border-none shadow-md font-bold text-rose-500 text-xs">
-                <option value="top">TOP</option>
-                <option value="bottom">BOTTOM</option>
-                <option value="shoes">SHOES</option>
+            <select id="catSelect" class="flex-grow p-4 rounded-2xl bg-slate-50 border-none font-bold text-rose-500 text-xs outline-none">
+                <option value="top">상의 (TOP)</option>
+                <option value="bottom">하의 (BOTTOM)</option>
+                <option value="shoes">신발 (SHOES)</option>
             </select>
-            <button onclick="makeMagic()" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-xs active:scale-95 transition flex items-center justify-center gap-2">
-                생성하기 <div id="spinner" class="loader"></div>
+            
+            <button onclick="makeMagic()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs active:scale-95 transition flex items-center justify-center gap-2">
+                <span>생성</span>
+                <div id="spinner" class="loader"></div>
             </button>
         </div>
     </div>
+
+    <p class="mt-8 text-[10px] text-slate-300 font-bold uppercase tracking-widest">Powered by Chan-Doong AI</p>
 
     <script>
         async function makeMagic() {
             const prompt = document.querySelector('#clothInput').value;
             const category = document.querySelector('#catSelect').value;
             const spinner = document.querySelector('#spinner');
+            
             if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
 
+            // 로딩 시작
             spinner.style.display = 'inline-block';
             
             try {
+                // Vercel 서버로 요청 (api/generate.js)
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt, category })
                 });
                 
+                if (!response.ok) throw new Error('서버가 응답하지 않습니다.');
+
                 const data = await response.json();
+                console.log("AI 응답 데이터:", data);
+
                 if(data.img) {
-                    document.getElementById(`${category}-fit`).innerHTML = `<img src="${data.img}" class="w-full h-full object-contain animate-in zoom-in duration-700">`;
+                    const targetLayer = document.getElementById(`${category}-fit`);
+                    // 이미지를 넣고 애니메이션 효과 추가
+                    targetLayer.innerHTML = `
+                        <img src="${data.img}" class="cloth-img animate-in zoom-in fade-in duration-700">
+                    `;
+                } else {
+                    alert("AI가 옷 이미지를 생성하지 못했습니다.");
                 }
+
             } catch (e) {
-                alert("형님, 서버 연결을 확인해보십쇼!");
+                console.error("에러 디테일:", e);
+                alert("형님, 서버 연결에 문제가 생겼습니다. Vercel 배포를 확인하십쇼!");
             } finally {
+                // 로딩 종료
                 spinner.style.display = 'none';
             }
         }
