@@ -2,99 +2,67 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Magic Fit - 찬둥 에디션</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI MAGIC FIT - 찬둥</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@900&family=Nanum+Pen+Script&display=swap');
-        body { font-family: 'Pretendard', sans-serif; background-color: #fff5f7; color: #4b5563; }
-        .chan-doong-signature { font-family: 'Nanum Pen Script', cursive; font-size: 22px; color: #f43f5e; transform: rotate(-10deg) translateY(6px); margin-right: 4px; }
-        
-        /* 🧍 마네킹 몸체 (세련된 실루엣) */
-        .mannequin-frame { position: relative; width: 240px; height: 420px; background: #ffe4e6; border-radius: 120px 120px 50px 50px; margin: 0 auto; border: 4px solid #fecdd3; overflow: hidden; }
-        .head-part { width: 50px; height: 65px; background: #fda4af; border-radius: 50%; margin: 25px auto 5px; }
-
-        /* 👕 실제 옷 실루엣 SVG 레이어 */
-        .cloth-layer { position: absolute; left: 50%; transform: translateX(-50%); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1)); }
-        .active-cloth { opacity: 1; transform: translateX(-50%) scale(1); }
-
-        #top-layer { top: 90px; width: 210px; z-index: 10; }
-        #bottom-layer { top: 195px; width: 160px; z-index: 5; }
-        #shoes-layer { top: 355px; width: 130px; z-index: 15; }
-
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .fitting-room { position: relative; width: 280px; height: 450px; background: #fff1f2; border-radius: 50px; border: 8px solid #fff; margin: 0 auto; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .layer { position: absolute; top:0; left:0; width: 100%; height: 100%; object-fit: contain; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #f43f5e; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-4 flex flex-col items-center min-h-screen pb-24">
+<body class="bg-rose-50 p-6 flex flex-col items-center">
+    <h1 class="text-3xl font-black text-rose-600 mb-8 italic uppercase tracking-tighter">AI MAGIC FIT</h1>
 
-    <header class="text-center my-6 flex items-center justify-center">
-        <span class="chan-doong-signature">찬둥의</span>
-        <h1 class="text-3xl font-black text-rose-600 italic tracking-tighter uppercase">MAGIC FIT</h1>
-    </header>
-
-    <div class="w-full max-w-sm bg-white rounded-[3rem] shadow-2xl p-6 mb-8 border-b-[15px] border-rose-300 text-center relative">
-        <div class="mannequin-frame">
-            <div class="head-part"></div>
-            
-            <svg id="top-layer" class="cloth-layer" viewBox="0 0 200 120">
-                <path id="top-path" d="M40,20 Q100,0 160,20 L190,100 L140,100 L135,40 Q100,30 65,40 L60,100 L10,100 Z" stroke="#333" stroke-width="1.5"/>
-            </svg>
-            
-            <svg id="bottom-layer" class="cloth-layer" viewBox="0 0 150 180">
-                <path id="bottom-path" d="M20,0 L130,0 L145,170 L85,170 L75,40 L65,170 L5,170 Z" stroke="#333" stroke-width="1.5"/>
-            </svg>
-            
-            <svg id="shoes-layer" class="cloth-layer" viewBox="0 0 120 40">
-                <path id="shoes-path" d="M10,35 Q10,10 45,10 L105,10 Q115,10 115,35 Z" stroke="#333" stroke-width="1.5"/>
-            </svg>
-        </div>
-        <div id="statusMsg" class="mt-6 text-xs font-black text-rose-400 italic italic">엑박 없는 리얼 핏! 조합해보십쇼 형님!</div>
-        <button onclick="location.reload()" class="mt-4 text-[10px] font-bold text-slate-300 uppercase underline">Reset Fitting</button>
+    <div class="fitting-room mb-6">
+        <img src="https://i.imgur.com/7Yf0Z8V.png" class="layer opacity-20">
+        <div id="bottom-fit" class="layer"></div>
+        <div id="top-fit" class="layer"></div>
+        <div id="shoes-fit" class="layer"></div>
     </div>
 
-    <div class="w-full max-w-sm grid grid-cols-2 gap-3 mb-10" id="closetList"></div>
+    <div class="w-full max-w-sm space-y-4">
+        <input type="text" id="clothInput" placeholder="예: 핑크색 가디건" class="w-full p-4 rounded-2xl border-none shadow-lg font-bold text-sm outline-none">
+        <div class="flex gap-2">
+            <select id="catSelect" class="flex-grow p-3 rounded-xl border-none shadow-md font-bold text-rose-500 text-xs">
+                <option value="top">TOP</option>
+                <option value="bottom">BOTTOM</option>
+                <option value="shoes">SHOES</option>
+            </select>
+            <button onclick="makeMagic()" class="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-xs active:scale-95 transition flex items-center gap-2">
+                생성하기 <div id="spinner" class="loader"></div>
+            </button>
+        </div>
+    </div>
 
     <script>
-        const clothes = [
-            {id:1, name:'핑크 가디건', cat:'top', color:'#ff99aa'},
-            {id:2, name:'네이비 와이드팬츠', cat:'bottom', color:'#000080'},
-            {id:3, name:'블랙 킬힐', cat:'shoes', color:'#222222'},
-            {id:4, name:'화이트 셔츠', cat:'top', color:'#ffffff'},
-            {id:5, name:'데님 스커트', cat:'bottom', color:'#4682b4'},
-            {id:6, name:'레드 스니커즈', cat:'shoes', color:'#ee4444'}
-        ];
+        async function makeMagic() {
+            const prompt = document.querySelector('#clothInput').value;
+            const category = document.querySelector('#catSelect').value;
+            const spinner = document.querySelector('#spinner');
+            if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
 
-        function renderCloset() {
-            const list = document.getElementById('closetList');
-            clothes.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-2xl border border-rose-50 shadow-sm text-center animate-in zoom-in";
-                div.innerHTML = `
-                    <div class="w-full h-12 rounded-lg mb-2 border flex items-center justify-center" style="background:${item.color}">
-                        <span class="text-[9px] font-black uppercase opacity-30">${item.cat}</span>
-                    </div>
-                    <p class="font-bold text-slate-700 text-xs mb-3 truncate">${item.name}</p>
-                    <button onclick="fitIt('${item.cat}', '${item.color}')" class="w-full bg-rose-500 text-white py-2 rounded-lg text-[10px] font-black uppercase active:scale-95 transition">Fit It</button>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        function fitIt(cat, color) {
-            const layer = document.getElementById(`${cat}-layer`);
-            const path = document.getElementById(`${cat}-path`);
+            spinner.style.display = 'inline-block';
             
-            path.setAttribute('fill', color);
-            layer.classList.add('active-cloth');
-
-            const dressed = document.querySelectorAll('.active-cloth').length;
-            if(dressed >= 3) {
-                document.getElementById('statusMsg').innerText = "✨ 형님, 이 코디 미쳤습니다! 예술이네요! ✨";
-                document.getElementById('statusMsg').className = "mt-6 text-sm font-black text-rose-600 animate-bounce";
+            try {
+                // Vercel의 /api/generate 경로로 요청 보냄
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, category })
+                });
+                
+                const data = await response.json();
+                if(data.img) {
+                    document.getElementById(`${category}-fit`).innerHTML = `<img src="${data.img}" class="w-full h-full object-contain animate-in zoom-in duration-700">`;
+                }
+            } catch (e) {
+                alert("형님, AI가 너무 바쁜가 봅니다. 잠시 후에 다시!");
+            } finally {
+                spinner.style.display = 'none';
             }
         }
-
-        renderCloset();
     </script>
 </body>
 </html>
