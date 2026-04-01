@@ -97,48 +97,34 @@
 
     <p class="mt-8 text-[10px] text-slate-300 font-bold uppercase tracking-widest">Powered by Chan-Doong AI</p>
 
-    <script>
-        async function makeMagic() {
-            const prompt = document.querySelector('#clothInput').value;
-            const category = document.querySelector('#catSelect').value;
-            const spinner = document.querySelector('#spinner');
+<script>
+    async function makeMagic() {
+        const prompt = document.querySelector('#clothInput').value;
+        const category = document.querySelector('#catSelect').value;
+        const spinner = document.querySelector('#spinner');
+        
+        if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
+        spinner.style.display = 'inline-block';
+        
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, category })
+            });
             
-            if(!prompt) return alert("옷 이름을 적으십쇼 형님!");
-
-            // 로딩 시작
-            spinner.style.display = 'inline-block';
-            
-            try {
-                // Vercel 서버로 요청 (api/generate.js)
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, category })
-                });
-                
-                if (!response.ok) throw new Error('서버가 응답하지 않습니다.');
-
-                const data = await response.json();
-                console.log("AI 응답 데이터:", data);
-
-                if(data.img) {
-                    const targetLayer = document.getElementById(`${category}-fit`);
-                    // 이미지를 넣고 애니메이션 효과 추가
-                    targetLayer.innerHTML = `
-                        <img src="${data.img}" class="cloth-img animate-in zoom-in fade-in duration-700">
-                    `;
-                } else {
-                    alert("AI가 옷 이미지를 생성하지 못했습니다.");
-                }
-
-            } catch (e) {
-                console.error("에러 디테일:", e);
-                alert("형님, 서버 연결에 문제가 생겼습니다. Vercel 배포를 확인하십쇼!");
-            } finally {
-                // 로딩 종료
-                spinner.style.display = 'none';
+            const data = await response.json();
+            if(data.img) {
+                const target = document.getElementById(`${category}-fit`);
+                // 이미지가 영역에 꽉 차게, 그리고 배경이 투명하지 않아도 잘 보이게 수정
+                target.innerHTML = `<img src="${data.img}" style="width:80%; height:80%; object-fit:contain; border-radius:20px; box-shadow:0 10px 20px rgba(0,0,0,0.1);" class="animate-in zoom-in duration-700">`;
             }
+        } catch (e) {
+            alert("연결 실패!");
+        } finally {
+            spinner.style.display = 'none';
         }
-    </script>
+    }
+</script>
 </body>
 </html>
